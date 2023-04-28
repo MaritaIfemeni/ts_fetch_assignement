@@ -1,61 +1,45 @@
 import axios from "axios";
+import { BisCompany, BisCompanyDetails } from "./types/businessTypes";
 
-
-interface Company {
-    businessId: string;
-    name: string;
-}
-
-
-
-const getCompanies = async () => {
+const getCompanies = async (
+  maxResult: number,
+  resultFrom: number,
+  postCode: string
+) => {
   try {
     const response = await axios.get(
-      "http://avoindata.prh.fi/bis/v1?totalResults=false&maxResults=3&resultsFrom=0&companyRegistrationFrom=2014-02-28"
+      `http://avoindata.prh.fi/bis/v1?totalResults=false&maxResults=${maxResult}&resultsFrom=${resultFrom}&streetAddressPostCode=${postCode}`
     );
-    const companies: Company[] = response.data.results.map((result: any) => ({
-        businessId: result.businessId,
-        name: result.name,
-        }));
-    return companies;
+    console.log("List of IDs:");
+    return response.data.results[0].businessId;
   } catch (error) {
     console.log(error + "error fetching companies");
   }
 };
-
-
 
 const getCompanyDetails = async (businessId: string) => {
   try {
     const response = await axios.get(
       `http://avoindata.prh.fi/opendata/bis/v1/${businessId}`
     );
-    return response.data;
+
+    const items = response.data.results[0] as BisCompanyDetails;
+    console.log("List of Company details:");
+    return items;
   } catch (error) {
     console.log(error + "error fetching company details");
   }
 };
 
-getCompanies().then((data) => {
-  console.log(data);
-});
+const showListOfIds = async () => {
+  const result = await getCompanies(2, 0, "01730");
+  console.log(result);
+};
 
-getCompanyDetails("3361252-1").then((data) => {
-  console.log(data);
-});
+const showCompanyDetail = async () => {
+  const result = await getCompanyDetails("3355613-6");
+  console.log(result);
+};
 
-
-
-// http://avoindata.prh.fi/opendata/bis/v1/{businessId}
-
-//GET /BIS/V1
-// http://avoindata.prh.fi/bis/v1?totalResults=false&maxResults=3&resultsFrom=0&companyRegistrationFrom=2014-02-28
-
-// BisCompany {
-//     businessId (string): Business ID ,
-//     name (string): Primary company name
-//     registrationDate (string): Date of registration ,
-//     companyForm (string, optional): Company form ,
-//     detailsUri (string, optional): A URI for more details, if details aren't already included ,
-//     liquidations (Array[BisCompanyLiquidation], optional): Bankruptcy, liquidation or restructuring proceedings ,
-//     }
+showCompanyDetail();
+showListOfIds();
